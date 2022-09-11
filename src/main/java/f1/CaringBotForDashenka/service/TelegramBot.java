@@ -9,6 +9,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
@@ -19,24 +21,25 @@ import java.util.List;
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
 
+    static final String aboutMeText ="Я был создан что-бы что....";
     final BotConfig config;
 
     public TelegramBot(BotConfig config) {
         this.config = config;
         List<BotCommand> listOfCommands = new ArrayList<>();
-        listOfCommands.add(new BotCommand("/start", "Начни получать свою заботу..."));
-        listOfCommands.add(new BotCommand("/aboutMe", "Немного о том для кого и зачем я был создан"));
-        listOfCommands.add(new BotCommand("/whatWeather","Расскажу какая погода в твоём городе"));
-        listOfCommands.add(new BotCommand("/whatToWear","Расскажу тебе как одеться по погоде, чтоб не заболеть"));
-        listOfCommands.add(new BotCommand("/wordsOfCare","Всем хочется получить немного заботы"));
-        listOfCommands.add(new BotCommand("/settings","подкрутить штуки"));
-        listOfCommands.add(new BotCommand("/showCat","Котички!"));
-        listOfCommands.add(new BotCommand("/showDog","Собачки!"));
+        listOfCommands.add(new BotCommand("/start", "start"));
+        listOfCommands.add(new BotCommand("/aboutme", "about me"));
+        listOfCommands.add(new BotCommand("/whatweather","what weather"));
+        listOfCommands.add(new BotCommand("/whattowear","what to wear"));
+        listOfCommands.add(new BotCommand("/wordsofcare","words of care"));
+        listOfCommands.add(new BotCommand("/settings","settings"));
+        listOfCommands.add(new BotCommand("/showcat","show cat"));
+        listOfCommands.add(new BotCommand("/showdog","show dog"));
         try{
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(),null));
         }
         catch (TelegramApiException e){
-            log.error("Error menu list"+e.getMessage());
+            log.error("error menu list"+e.getMessage());
         }
     }
 
@@ -59,7 +62,12 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             switch (messageText){
                 case "/start":
-                    srartCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+         //           srartCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                    sendMessage(chatId,aboutMeText);
+                    viewStartMenu(chatId);
+                    break;
+                case "/aboutme":
+                    sendMessage(chatId, aboutMeText);
                     break;
                 default: sendMessage(chatId, "Sorry)");
             }
@@ -72,6 +80,30 @@ public class TelegramBot extends TelegramLongPollingBot {
         log.info("Replied to user " + name );
         sendMessage(chatId, answer);
     }
+    private void viewStartMenu(long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText("Выбери скорее чего ты хочешь!");
+
+        InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
+        var timeButton = new InlineKeyboardButton();
+        timeButton.setText("Время");
+        timeButton.setCallbackData("TIME_BUTTON");
+        var nameButton = new InlineKeyboardButton();
+        nameButton.setText("Имя пользователя");
+        nameButton.setCallbackData("NAME_BUTTON");
+
+        rowInLine.add(timeButton);
+        rowInLine.add(nameButton);
+        rowsInLine.add(rowInLine);
+
+        markupInLine.setKeyboard(rowsInLine);
+        message.setReplyMarkup((markupInLine));
+
+    }
+
 
     private void sendMessage(long chatId, String textToSend){
         SendMessage message = new SendMessage();
