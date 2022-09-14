@@ -15,7 +15,6 @@ import java.util.List;
     public class WeatherGiver {
         public static void main(String[] args) throws IOException {
             File f = new File("D:\\progg\\Learning\\java\\APICALL1\\src\\text");
-            FileWriter w = new FileWriter(f);
 
             String buf = Give5DaysWeatherString();
             for(String s:CleanUpWeatherString(buf)){
