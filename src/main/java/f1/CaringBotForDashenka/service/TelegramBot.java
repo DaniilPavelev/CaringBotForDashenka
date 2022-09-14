@@ -1,11 +1,15 @@
 package f1.CaringBotForDashenka.service;
 
+import f1.CaringBotForDashenka.Data.Answers;
+import f1.CaringBotForDashenka.Data.TehnicString;
 import f1.CaringBotForDashenka.config.BotConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
@@ -13,15 +17,19 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+
+import static f1.CaringBotForDashenka.service.WeatherGiver.GiveClear5DaysWeatherString;
+import static f1.CaringBotForDashenka.service.WeatherGiver.GiveClearCurrentWeatherString;
 
 
 @Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
-
-    static final String aboutMeText ="Я был создан что-бы что....";
     final BotConfig config;
 
     public TelegramBot(BotConfig config) {
@@ -56,23 +64,73 @@ public class TelegramBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
 
-        if(update.hasMessage()&&update.getMessage().hasText()){
+        if(update.hasMessage()&&update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            switch (messageText){
+            switch (messageText) {
                 case "/start":
-         //           srartCommandReceived(chatId, update.getMessage().getChat().getFirstName());
-                    sendMessage(chatId,aboutMeText);
-                    viewStartMenu(chatId);
+                    srartCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                     break;
                 case "/aboutme":
-                    sendMessage(chatId, aboutMeText);
+                    viewAboutMeMenu(chatId);
                     break;
-                default: sendMessage(chatId, "Sorry)");
+                case "/whatweather":
+                    SendMessage message = new SendMessage();
+                    message.setChatId(String.valueOf(chatId));
+                    message.setText(giveWeatherData());
+                    executeMessage(message);
+                    viewAboutMeMenu(chatId);
+                    break;
+                case "/whattowear":
+                    viewAboutMeMenu(chatId);
+                    break;
+                default:
+                    sendMessage(chatId, "Sorry)");
             }
         }
+        else if(update.hasCallbackQuery()){
+            String callbackData = update.getCallbackQuery().getData();
+            long messageId = update.getCallbackQuery().getMessage().getMessageId();
+            long chatId = update.getCallbackQuery().getMessage().getChatId();
+            if(callbackData.equals(TehnicString.time)){
+                Date date=new Date();
+                String text = date.toString();
+                EditMessageText message = new EditMessageText();
+                message.setChatId(chatId);
+                message.setText(text);
+                message.setMessageId((int)messageId);
+                executeMessage(message);
+                viewAboutMeMenu(chatId);
+            }
+            else if(callbackData.equals(TehnicString.nameUser)){
+                String text = update.getCallbackQuery().getMessage().getChat().getFirstName() ;
+                EditMessageText message = new EditMessageText();
+                message.setChatId(chatId);
+                message.setText(text);
+                message.setMessageId((int)messageId);
+                executeMessage(message);
+                viewAboutMeMenu(chatId);
+            }
 
+        }
+
+    }
+
+    private  String giveWeatherData(){
+        String str;
+        HashMap<String,String> dataMap = null;
+        try {
+            dataMap = GiveClearCurrentWeatherString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        str = "погода:\nТемпература: " + dataMap.get("temp")+"\nОщущается как: "+ dataMap.get("feels_like");
+        return str;
+    }
+
+    private void viewWeatherData(long chatId) {
     }
 
     private void srartCommandReceived(long chatId, String name){
@@ -80,7 +138,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         log.info("Replied to user " + name );
         sendMessage(chatId, answer);
     }
-    private void viewStartMenu(long chatId) {
+    private void viewAboutMeMenu(long chatId) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
         message.setText("Выбери скорее чего ты хочешь!");
@@ -89,11 +147,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
         List<InlineKeyboardButton> rowInLine = new ArrayList<>();
         var timeButton = new InlineKeyboardButton();
-        timeButton.setText("Время");
-        timeButton.setCallbackData("TIME_BUTTON");
+        timeButton.setText(Answers.time);
+        timeButton.setCallbackData(TehnicString.time);
         var nameButton = new InlineKeyboardButton();
-        nameButton.setText("Имя пользователя");
-        nameButton.setCallbackData("NAME_BUTTON");
+        nameButton.setText(Answers.nameUser);
+        nameButton.setCallbackData(TehnicString.nameUser);
 
         rowInLine.add(timeButton);
         rowInLine.add(nameButton);
@@ -102,6 +160,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         markupInLine.setKeyboard(rowsInLine);
         message.setReplyMarkup((markupInLine));
 
+        executeMessage(message);
     }
 
 
@@ -109,6 +168,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
         message.setText(textToSend);
+        executeMessage(message);
+    }
+
+    private void executeMessage(SendMessage message){
         try{
             execute(message);
         }
@@ -116,6 +179,16 @@ public class TelegramBot extends TelegramLongPollingBot {
             log.error("Error occured: "+e.getMessage());
         }
     }
+
+    private void executeMessage(EditMessageText message){
+        try{
+            execute(message);
+        }
+        catch (TelegramApiException e) {
+            log.error("Error occured: "+e.getMessage());
+        }
+    }
+
 
 }
 

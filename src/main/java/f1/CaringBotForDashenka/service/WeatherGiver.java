@@ -13,30 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 
     public class WeatherGiver {
-        public static void main(String[] args) throws IOException {
-            File f = new File("D:\\progg\\Learning\\java\\APICALL1\\src\\text");
-
-            String buf = Give5DaysWeatherString();
-            for(String s:CleanUpWeatherString(buf)){
-                System.out.println(s);
-            }
-            HashMap<String,String> currentWeatherMap = new HashMap<>();
-            currentWeatherMap = ClearCurrentWeatherString(GiveCurrentWeatherString());
-            System.out.println("----------------------");
-            System.out.println(GiveCurrentWeatherString());
-            Date date = new Date();
-            System.out.println(date.toString());
-            System.out.println("++++++++++++++++");
-            System.out.println(currentWeatherMap.get("temp"));
-            System.out.println(currentWeatherMap.get("feels_like"));
-            System.out.println(currentWeatherMap.get("speed"));
-            System.out.println(currentWeatherMap.get("all"));
-            System.out.println("++++++++++++++++");
-            HashMap<String,String> fiveDaysWeatherMap = new HashMap<>(Clear5DaysWeatherString(CleanUpWeatherString(Give5DaysWeatherString())));
-
-            System.out.println(fiveDaysWeatherMap.get("temp09"));
-        }
-
         private static String giveStringDayFromData(Date date){
             String dateTimeString = String.valueOf(date);
             String[] dats = dateTimeString.split(" ");
@@ -48,52 +24,58 @@ import java.util.List;
             String[] dats = dateTimeString.split(" ");
             return dats[3];
         }
-        public static HashMap<String,String> Clear5DaysWeatherString(List<String> data) throws JsonProcessingException {
+        public static HashMap<String,String> GiveClear5DaysWeatherString() throws IOException {
+            List<String> data = CleanUpWeatherString();
             HashMap<String,String> usfulData = new HashMap<>();
             ObjectMapper mainMapper = new ObjectMapper();
-            ObjectMapper windMapper = new ObjectMapper();
-            ObjectMapper cloudMapper = new ObjectMapper();
-            ObjectMapper timeMapper = new ObjectMapper();
-            ObjectMapper weatherMapper = new ObjectMapper();
+
             for (int i=0;i<data.size();i++) {
-                JsonNode timeNode = timeMapper.readTree(data.get(i)).get("dt_txt");
+                JsonNode timeNode = mainMapper.readTree(data.get(i)).get("dt_txt");
                 String dateTime = timeNode.toString().substring(12,14);
                 JsonNode mainNode = mainMapper.readTree(data.get(i)).get("main");
                 usfulData.put("temp"+dateTime, mainNode.get("temp").toString());
                 usfulData.put("feels_like"+dateTime, mainNode.get("feels_like").toString());
 
-                JsonNode windNode = windMapper.readTree(data.get(i)).get("wind");
+                JsonNode windNode = mainMapper.readTree(data.get(i)).get("wind");
                 usfulData.put("speed"+dateTime, windNode.get("speed").toString());
 
-                JsonNode cloudsNode = cloudMapper.readTree(data.get(i)).get("clouds");
+                JsonNode cloudsNode = mainMapper.readTree(data.get(i)).get("clouds");
                 usfulData.put("all"+dateTime, String.valueOf(cloudsNode.get("all")));
-
-                JsonNode watherNode = cloudMapper.readTree(data.get(i)).get("clouds");
-                usfulData.put("all"+dateTime, String.valueOf(cloudsNode.get("all")));
-
-
+                var a = 10;
+                JsonNode statusNode = mainMapper.readTree(data.get(i)).get("weather").get(0);
+                usfulData.put("main"+dateTime, String.valueOf(statusNode.get("main")));
+                usfulData.put("icon"+dateTime, String.valueOf(statusNode.get("icon")));
+                usfulData.put("id"+dateTime, String.valueOf(statusNode.get("id")));
+                usfulData.put("description"+dateTime, String.valueOf(statusNode.get("description")));
             }
+
             return usfulData;
         }
-        public static HashMap<String,String> ClearCurrentWeatherString(String data) throws JsonProcessingException {
+        public static HashMap<String,String> GiveClearCurrentWeatherString() throws IOException {
+            String data = GiveCurrentWeatherString();
             HashMap<String,String> usfulData = new HashMap<>();
             ObjectMapper mainMapper = new ObjectMapper();
             JsonNode mainNode = mainMapper.readTree(data).get("main");
+            //----------------------------------------------------------
             usfulData.put("temp",mainNode.get("temp").toString());
             usfulData.put("feels_like",mainNode.get("feels_like").toString());
 
-            ObjectMapper windMapper = new ObjectMapper();
-            JsonNode windNode = windMapper.readTree(data).get("wind");
+            JsonNode windNode = mainMapper.readTree(data).get("wind");
             usfulData.put("speed",windNode.get("speed").toString());
 
-            ObjectMapper cloudMapper = new ObjectMapper();
-            JsonNode cloudsNode = cloudMapper.readTree(data).get("clouds");
+            JsonNode cloudsNode = mainMapper.readTree(data).get("clouds");
             usfulData.put("all", String.valueOf(cloudsNode.get("all")));
+
+            JsonNode statusNode = mainMapper.readTree(data).get("weather").get(0);
+            usfulData.put("main", String.valueOf(statusNode.get("main")));
+            usfulData.put("icon", String.valueOf(statusNode.get("icon")));
+            usfulData.put("id", String.valueOf(statusNode.get("id")));
+            usfulData.put("description", String.valueOf(statusNode.get("description")));
 
             return usfulData;
         }
 
-        public static String GiveCurrentWeatherString() throws IOException {
+        private static String GiveCurrentWeatherString() throws IOException {
             //https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API key}
             String urlString = "https://api.openweathermap.org/data/2.5/weather?lat=43.5854823&lon=39.723109&appid=5a5fd7be31dd9215a4cfd17288ef9652&units=metric";
 
@@ -115,7 +97,7 @@ import java.util.List;
             in.close();
             return response.toString();
         }
-        public static String Give5DaysWeatherString() throws IOException {
+        private static String Give5DaysWeatherString() throws IOException {
             String urlString = "http://api.openweathermap.org/data/2.5/forecast?lat=43.5854823&lon=39.723109&appid=5a5fd7be31dd9215a4cfd17288ef9652&units=metric";
 
             File file = new File("D:\\progg\\Learning\\java\\APICALL1\\src\\text");
@@ -138,7 +120,8 @@ import java.util.List;
 
         }
 
-        public static List<String> CleanUpWeatherString(String data) throws JsonProcessingException {
+        private static List<String> CleanUpWeatherString() throws IOException {
+            String data = Give5DaysWeatherString();
             List<String> weatherList = new ArrayList<>();
             JsonNode arrNode = new ObjectMapper().readTree(data).get("list");
             if(arrNode.isArray()){
