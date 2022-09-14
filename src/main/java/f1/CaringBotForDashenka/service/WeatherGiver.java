@@ -32,21 +32,47 @@ import java.util.List;
             System.out.println(currentWeatherMap.get("speed"));
             System.out.println(currentWeatherMap.get("all"));
             System.out.println("++++++++++++++++");
+            HashMap<String,String> fiveDaysWeatherMap = new HashMap<>(Clear5DaysWeatherString(CleanUpWeatherString(Give5DaysWeatherString())));
+
+            System.out.println(fiveDaysWeatherMap.get("temp09"));
         }
 
+        private static String giveStringDayFromData(Date date){
+            String dateTimeString = String.valueOf(date);
+            String[] dats = dateTimeString.split(" ");
+            return dats[2];
+        }
 
-        public static String giveStringTimeFromData(Date date){
+        private static String giveStringTimeFromData(Date date){
             String dateTimeString = String.valueOf(date);
             String[] dats = dateTimeString.split(" ");
             return dats[3];
         }
-        public static HashMap<String,String> Clear5DaysWeatherString(String data) throws JsonProcessingException {
+        public static HashMap<String,String> Clear5DaysWeatherString(List<String> data) throws JsonProcessingException {
             HashMap<String,String> usfulData = new HashMap<>();
-            Date date = new Date();
-            String time = giveStringTimeFromData(date);
+            ObjectMapper mainMapper = new ObjectMapper();
+            ObjectMapper windMapper = new ObjectMapper();
+            ObjectMapper cloudMapper = new ObjectMapper();
+            ObjectMapper timeMapper = new ObjectMapper();
+            ObjectMapper weatherMapper = new ObjectMapper();
+            for (int i=0;i<data.size();i++) {
+                JsonNode timeNode = timeMapper.readTree(data.get(i)).get("dt_txt");
+                String dateTime = timeNode.toString().substring(12,14);
+                JsonNode mainNode = mainMapper.readTree(data.get(i)).get("main");
+                usfulData.put("temp"+dateTime, mainNode.get("temp").toString());
+                usfulData.put("feels_like"+dateTime, mainNode.get("feels_like").toString());
+
+                JsonNode windNode = windMapper.readTree(data.get(i)).get("wind");
+                usfulData.put("speed"+dateTime, windNode.get("speed").toString());
+
+                JsonNode cloudsNode = cloudMapper.readTree(data.get(i)).get("clouds");
+                usfulData.put("all"+dateTime, String.valueOf(cloudsNode.get("all")));
+
+                JsonNode watherNode = cloudMapper.readTree(data.get(i)).get("clouds");
+                usfulData.put("all"+dateTime, String.valueOf(cloudsNode.get("all")));
 
 
-
+            }
             return usfulData;
         }
         public static HashMap<String,String> ClearCurrentWeatherString(String data) throws JsonProcessingException {
@@ -55,7 +81,6 @@ import java.util.List;
             JsonNode mainNode = mainMapper.readTree(data).get("main");
             usfulData.put("temp",mainNode.get("temp").toString());
             usfulData.put("feels_like",mainNode.get("feels_like").toString());
-            //usfulData.put("",mainNode.get("").toString());
 
             ObjectMapper windMapper = new ObjectMapper();
             JsonNode windNode = windMapper.readTree(data).get("wind");
@@ -119,7 +144,7 @@ import java.util.List;
             if(arrNode.isArray()){
                 for(final JsonNode objNode:arrNode ){
                     String forecastTime = objNode.get("dt_txt").toString();
-                    if(forecastTime.contains("9:00")){
+                    if(forecastTime.substring(9,11).contains(giveStringDayFromData(new Date()))){
                         weatherList.add(objNode.toString());
                     }
                 }
