@@ -71,6 +71,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             switch (messageText) {
                 case "/start":
                     srartCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                    viewAboutMeMenu(chatId);
                     break;
                 case "/aboutme":
                     viewAboutMeMenu(chatId);
@@ -93,26 +94,32 @@ public class TelegramBot extends TelegramLongPollingBot {
             String callbackData = update.getCallbackQuery().getData();
             long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
-            if(callbackData.equals(TehnicString.time)){
-                Date date=new Date();
-                String text = date.toString();
-                EditMessageText message = new EditMessageText();
-                message.setChatId(chatId);
-                message.setText(text);
-                message.setMessageId((int)messageId);
+            if(callbackData.equals(TehnicString.aboutMe)){
+                sendMessage(chatId,Answers.aboutMeText);
+                viewAboutMeMenu(chatId);
+            }
+            else if(callbackData.equals(TehnicString.whatWeather)){
+                SendMessage message = new SendMessage();
+                message.setChatId(String.valueOf(chatId));
+                message.setText(giveWeatherData());
                 executeMessage(message);
                 viewAboutMeMenu(chatId);
             }
-            else if(callbackData.equals(TehnicString.nameUser)){
-                String text = update.getCallbackQuery().getMessage().getChat().getFirstName() ;
-                EditMessageText message = new EditMessageText();
-                message.setChatId(chatId);
-                message.setText(text);
-                message.setMessageId((int)messageId);
-                executeMessage(message);
-                viewAboutMeMenu(chatId);
-            }
+            else if(callbackData.equals(TehnicString.whatToWear)){
 
+            }
+            else if(callbackData.equals(TehnicString.wordsOfCare)){
+
+            }
+            else if(callbackData.equals(TehnicString.settings)){
+
+            }
+            else if(callbackData.equals(TehnicString.showCat)){
+
+            }
+            else if(callbackData.equals(TehnicString.showDog)){
+
+            }
         }
 
     }
@@ -145,17 +152,57 @@ public class TelegramBot extends TelegramLongPollingBot {
 
         InlineKeyboardMarkup markupInLine = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
-        List<InlineKeyboardButton> rowInLine = new ArrayList<>();
-        var timeButton = new InlineKeyboardButton();
-        timeButton.setText(Answers.time);
-        timeButton.setCallbackData(TehnicString.time);
-        var nameButton = new InlineKeyboardButton();
-        nameButton.setText(Answers.nameUser);
-        nameButton.setCallbackData(TehnicString.nameUser);
+        List<InlineKeyboardButton> rowInLine1 = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine2 = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine3 = new ArrayList<>();
+        List<InlineKeyboardButton> rowInLine4 = new ArrayList<>();
 
-        rowInLine.add(timeButton);
-        rowInLine.add(nameButton);
-        rowsInLine.add(rowInLine);
+        var aboutMeButton = new InlineKeyboardButton();
+        aboutMeButton.setText(Answers.aboutMe);
+        aboutMeButton.setCallbackData(TehnicString.aboutMe);
+
+        var wearButton = new InlineKeyboardButton();
+        wearButton.setText(Answers.whatToWear);
+        wearButton.setCallbackData(TehnicString.whatToWear);
+
+        var weatherButton = new InlineKeyboardButton();
+        weatherButton.setText(Answers.whatWeather);
+        weatherButton.setCallbackData(TehnicString.whatWeather);
+
+        var wordsOfCareButton = new InlineKeyboardButton();
+        wordsOfCareButton.setText(Answers.wordsOfCare);
+        wordsOfCareButton.setCallbackData(TehnicString.wordsOfCare);
+
+        var settingsButton = new InlineKeyboardButton();
+        settingsButton.setText(Answers.settings);
+        settingsButton.setCallbackData(TehnicString.settings);
+
+        var showCatButton = new InlineKeyboardButton();
+        showCatButton.setText(Answers.showCat);
+        showCatButton.setCallbackData(TehnicString.showCat);
+
+        var showDogsButton = new InlineKeyboardButton();
+        showDogsButton.setText(Answers.showDog);
+        showDogsButton.setCallbackData(TehnicString.showDog);
+
+
+
+
+        rowInLine1.add(aboutMeButton);
+        rowInLine1.add(weatherButton);
+
+        rowInLine2.add(wearButton);
+        rowInLine2.add(wordsOfCareButton);
+
+        rowInLine3.add(settingsButton);
+        rowInLine3.add(showDogsButton);
+
+        rowInLine4.add(showCatButton);
+
+        rowsInLine.add(rowInLine1);
+        rowsInLine.add(rowInLine2);
+        rowsInLine.add(rowInLine3);
+        rowsInLine.add(rowInLine4);
 
         markupInLine.setKeyboard(rowsInLine);
         message.setReplyMarkup((markupInLine));
