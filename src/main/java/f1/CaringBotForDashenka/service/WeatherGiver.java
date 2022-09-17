@@ -1,10 +1,12 @@
 package f1.CaringBotForDashenka.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 
     public class WeatherGiver {
+
         private static String giveStringDayFromData(Date date){
             String dateTimeString = String.valueOf(date);
             String[] dats = dateTimeString.split(" ");
@@ -44,8 +47,6 @@ import java.util.List;
                 var a = 10;
                 JsonNode statusNode = mainMapper.readTree(data.get(i)).get("weather").get(0);
                 usfulData.put("main"+dateTime, String.valueOf(statusNode.get("main")));
-                usfulData.put("icon"+dateTime, String.valueOf(statusNode.get("icon")));
-                usfulData.put("id"+dateTime, String.valueOf(statusNode.get("id")));
                 usfulData.put("description"+dateTime, String.valueOf(statusNode.get("description")));
             }
 
@@ -68,8 +69,6 @@ import java.util.List;
 
             JsonNode statusNode = mainMapper.readTree(data).get("weather").get(0);
             usfulData.put("main", String.valueOf(statusNode.get("main")));
-            usfulData.put("icon", String.valueOf(statusNode.get("icon")));
-            usfulData.put("id", String.valueOf(statusNode.get("id")));
             usfulData.put("description", String.valueOf(statusNode.get("description")));
 
             return usfulData;
@@ -79,7 +78,6 @@ import java.util.List;
             //https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API key}
             String urlString = "https://api.openweathermap.org/data/2.5/weather?lat=43.5854823&lon=39.723109&appid=5a5fd7be31dd9215a4cfd17288ef9652&units=metric";
 
-            File file = new File("D:\\progg\\Learning\\java\\APICALL1\\src\\text");
             URL urlObject = new URL(urlString);
             HttpURLConnection connection = (HttpURLConnection) urlObject.openConnection();
             connection.setRequestMethod("GET");

@@ -9,7 +9,6 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
@@ -19,10 +18,11 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import static f1.CaringBotForDashenka.Data.Answers.*;
+import static f1.CaringBotForDashenka.service.Helper.returnClosestTime;
 import static f1.CaringBotForDashenka.service.WeatherGiver.GiveClear5DaysWeatherString;
 import static f1.CaringBotForDashenka.service.WeatherGiver.GiveClearCurrentWeatherString;
 
@@ -37,12 +37,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         List<BotCommand> listOfCommands = new ArrayList<>();
         listOfCommands.add(new BotCommand("/start", "start"));
         listOfCommands.add(new BotCommand("/aboutme", "about me"));
-        listOfCommands.add(new BotCommand("/whatweather","what weather"));
-        listOfCommands.add(new BotCommand("/whattowear","what to wear"));
-        listOfCommands.add(new BotCommand("/wordsofcare","words of care"));
-        listOfCommands.add(new BotCommand("/settings","settings"));
-        listOfCommands.add(new BotCommand("/showcat","show cat"));
-        listOfCommands.add(new BotCommand("/showdog","show dog"));
         try{
             this.execute(new SetMyCommands(listOfCommands, new BotCommandScopeDefault(),null));
         }
@@ -70,20 +64,11 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             switch (messageText) {
                 case "/start":
-                    srartCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                    srartCommandReceived(chatId);
                     viewAboutMeMenu(chatId);
                     break;
                 case "/aboutme":
-                    viewAboutMeMenu(chatId);
-                    break;
-                case "/whatweather":
-                    SendMessage message = new SendMessage();
-                    message.setChatId(String.valueOf(chatId));
-                    message.setText(giveWeatherData());
-                    executeMessage(message);
-                    viewAboutMeMenu(chatId);
-                    break;
-                case "/whattowear":
+                    sendMessage(chatId, aboutMeText);
                     viewAboutMeMenu(chatId);
                     break;
                 default:
@@ -106,22 +91,63 @@ public class TelegramBot extends TelegramLongPollingBot {
                 viewAboutMeMenu(chatId);
             }
             else if(callbackData.equals(TehnicString.whatToWear)){
-
+                SendMessage message = new SendMessage();
+                message.setChatId(String.valueOf(chatId));
+                message.setText(recommendWhatToWear());
+                executeMessage(message);
+                viewAboutMeMenu(chatId);
             }
             else if(callbackData.equals(TehnicString.wordsOfCare)){
 
             }
-            else if(callbackData.equals(TehnicString.settings)){
-
-            }
             else if(callbackData.equals(TehnicString.showCat)){
-
+                sendPhoto()
+                viewAboutMeMenu(chatId);
             }
             else if(callbackData.equals(TehnicString.showDog)){
 
             }
         }
 
+    }
+
+    private String recommendWhatToWear() {
+        boolean isRain=false, isSnow = false;
+        int counter=0;
+        double averageTemp = 0;
+        HashMap<String,String> dataMap = null;
+        try {
+            dataMap = GiveClear5DaysWeatherString();
+        }
+        catch (IOException e){
+            throw new RuntimeException(e);
+        }
+        StringBuilder str = new StringBuilder();
+        for(int i=returnClosestTime();i<24&&i!=-1;i+=3){
+            str.append("Температура воздуха в "+i+":00 "+dataMap.get("temp"+i)+" градуса"+"\n");
+            averageTemp =averageTemp + Double.parseDouble(dataMap.get("temp"+i));
+            counter++;
+            if (dataMap.get("main"+i) =="Rain") isRain=true;
+            if (dataMap.get("main"+i) =="Snow") isSnow=true;
+        }
+        averageTemp = (double) Math.round((averageTemp*100 / counter))/100;
+        str.append("Средняя температура " + averageTemp+" градуса" +"\n");
+
+        if(isSnow)
+            str.append(textSnowyWeather);
+        else if (isRain&&averageTemp<=25 && averageTemp>=18)
+            str.append(textBasicAndRainyWeather);
+        else if(!isRain&&averageTemp<=25 && averageTemp>=18)
+            str.append(textBasicAndSunnyWeather);
+        else if(averageTemp<=17&&averageTemp>=10)
+            str.append(textSomeColdWeather);
+        else if(averageTemp<10)
+            str.append(textColdWeather);
+        else if(averageTemp>25)
+            str.append(textHotWeather);
+        str.append("\n"+textFinalToWear);
+
+        return str.toString();
     }
 
     private  String giveWeatherData(){
@@ -140,9 +166,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     private void viewWeatherData(long chatId) {
     }
 
-    private void srartCommandReceived(long chatId, String name){
-        String answer = "Hi, " + name+ ", nice man";
-        log.info("Replied to user " + name );
+    private void srartCommandReceived(long chatId){
+        String answer = startText ;
         sendMessage(chatId, answer);
     }
     private void viewAboutMeMenu(long chatId) {
@@ -173,10 +198,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         wordsOfCareButton.setText(Answers.wordsOfCare);
         wordsOfCareButton.setCallbackData(TehnicString.wordsOfCare);
 
-        var settingsButton = new InlineKeyboardButton();
-        settingsButton.setText(Answers.settings);
-        settingsButton.setCallbackData(TehnicString.settings);
-
         var showCatButton = new InlineKeyboardButton();
         showCatButton.setText(Answers.showCat);
         showCatButton.setCallbackData(TehnicString.showCat);
@@ -194,7 +215,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         rowInLine2.add(wearButton);
         rowInLine2.add(wordsOfCareButton);
 
-        rowInLine3.add(settingsButton);
         rowInLine3.add(showDogsButton);
 
         rowInLine4.add(showCatButton);
