@@ -3,12 +3,15 @@ package f1.CaringBotForDashenka.service;
 import f1.CaringBotForDashenka.Data.Answers;
 import f1.CaringBotForDashenka.Data.TehnicString;
 import f1.CaringBotForDashenka.config.BotConfig;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
@@ -22,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 
 import static f1.CaringBotForDashenka.Data.Answers.*;
+import static f1.CaringBotForDashenka.service.AnimalPhotoIMG.giveURLforCats;
+import static f1.CaringBotForDashenka.service.AnimalPhotoIMG.giveURLforDogs;
 import static f1.CaringBotForDashenka.service.Helper.returnClosestTime;
 import static f1.CaringBotForDashenka.service.WeatherGiver.GiveClear5DaysWeatherString;
 import static f1.CaringBotForDashenka.service.WeatherGiver.GiveClearCurrentWeatherString;
@@ -55,6 +60,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         return config.getBotToken();
     }
 
+    @SneakyThrows
     @Override
     public void onUpdateReceived(Update update) {
 
@@ -101,11 +107,18 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             }
             else if(callbackData.equals(TehnicString.showCat)){
-                sendPhoto()
+                SendPhoto sendPhoto = new SendPhoto();
+                sendPhoto.setChatId(chatId);
+                sendPhoto.setPhoto(new InputFile(giveURLforCats()));
+                execute(sendPhoto);
                 viewAboutMeMenu(chatId);
             }
             else if(callbackData.equals(TehnicString.showDog)){
-
+                SendPhoto sendPhoto = new SendPhoto();
+                sendPhoto.setChatId(chatId);
+                sendPhoto.setPhoto(new InputFile(giveURLforDogs()));
+                execute(sendPhoto);
+                viewAboutMeMenu(chatId);
             }
         }
 
