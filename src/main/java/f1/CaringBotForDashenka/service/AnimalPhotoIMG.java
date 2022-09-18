@@ -1,6 +1,5 @@
 package f1.CaringBotForDashenka.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
@@ -18,7 +17,7 @@ public class AnimalPhotoIMG {
     }
 
     @SneakyThrows
-    public static String giveURLforCats() throws JsonProcessingException {
+    public static String giveURLforCats(){
         String string = giveCatsJSON();
         ObjectMapper mainMapper = new ObjectMapper();
         JsonNode mainNode = mainMapper.readTree(string).get(0).get("url");
@@ -29,7 +28,7 @@ public class AnimalPhotoIMG {
     }
 
     @SneakyThrows
-    public static String giveURLforDogs() throws JsonProcessingException {
+    public static String giveURLforDogs(){
         String string = giveDogsJSON();
         ObjectMapper mainMapper = new ObjectMapper();
         JsonNode mainNode = mainMapper.readTree(string).get(0).get("url");
@@ -52,7 +51,7 @@ public class AnimalPhotoIMG {
         }
         BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         String inputLine;
-        StringBuffer response = new StringBuffer();
+        StringBuilder response = new StringBuilder();
         while ((inputLine = in.readLine())!=null){
             response.append(inputLine);
         }
@@ -73,7 +72,7 @@ public class AnimalPhotoIMG {
         }
         BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
         String inputLine;
-        StringBuffer response = new StringBuffer();
+        StringBuilder response = new StringBuilder();
         while ((inputLine = in.readLine())!=null){
             response.append(inputLine);
         }

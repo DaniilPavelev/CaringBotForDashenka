@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -22,11 +21,6 @@ import java.util.List;
             return dats[2];
         }
 
-        private static String giveStringTimeFromData(Date date){
-            String dateTimeString = String.valueOf(date);
-            String[] dats = dateTimeString.split(" ");
-            return dats[3];
-        }
         public static HashMap<String,String> GiveClear5DaysWeatherString() throws IOException {
             List<String> data = CleanUpWeatherString();
             HashMap<String,String> usfulData = new HashMap<>();
@@ -44,7 +38,7 @@ import java.util.List;
 
                 JsonNode cloudsNode = mainMapper.readTree(data.get(i)).get("clouds");
                 usfulData.put("all"+dateTime, String.valueOf(cloudsNode.get("all")));
-                var a = 10;
+
                 JsonNode statusNode = mainMapper.readTree(data.get(i)).get("weather").get(0);
                 usfulData.put("main"+dateTime, String.valueOf(statusNode.get("main")));
                 usfulData.put("description"+dateTime, String.valueOf(statusNode.get("description")));
@@ -88,7 +82,7 @@ import java.util.List;
             }
             BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String inputLine;
-            StringBuffer response = new StringBuffer();
+            StringBuilder response = new StringBuilder();
             while ((inputLine = in.readLine())!=null){
                 response.append(inputLine);
             }
@@ -98,7 +92,6 @@ import java.util.List;
         private static String Give5DaysWeatherString() throws IOException {
             String urlString = "http://api.openweathermap.org/data/2.5/forecast?lat=43.5854823&lon=39.723109&appid=5a5fd7be31dd9215a4cfd17288ef9652&units=metric";
 
-            File file = new File("D:\\progg\\Learning\\java\\APICALL1\\src\\text");
             URL urlObject = new URL(urlString);
             HttpURLConnection connection = (HttpURLConnection) urlObject.openConnection();
             connection.setRequestMethod("GET");
@@ -109,7 +102,7 @@ import java.util.List;
             }
             BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String inputLine;
-            StringBuffer response = new StringBuffer();
+            StringBuilder response = new StringBuilder();
             while ((inputLine = in.readLine())!=null){
                 response.append(inputLine);
             }

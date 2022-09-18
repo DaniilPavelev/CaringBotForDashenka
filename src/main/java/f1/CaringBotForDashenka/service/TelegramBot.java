@@ -10,7 +10,6 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
@@ -28,6 +27,7 @@ import static f1.CaringBotForDashenka.Data.Answers.*;
 import static f1.CaringBotForDashenka.service.AnimalPhotoIMG.giveURLforCats;
 import static f1.CaringBotForDashenka.service.AnimalPhotoIMG.giveURLforDogs;
 import static f1.CaringBotForDashenka.service.Helper.returnClosestTime;
+import static f1.CaringBotForDashenka.service.RandomPhrasesOfCare.giveRandomPhrasesOfCare;
 import static f1.CaringBotForDashenka.service.WeatherGiver.GiveClear5DaysWeatherString;
 import static f1.CaringBotForDashenka.service.WeatherGiver.GiveClearCurrentWeatherString;
 
@@ -83,28 +83,22 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
         else if(update.hasCallbackQuery()){
             String callbackData = update.getCallbackQuery().getData();
-            long messageId = update.getCallbackQuery().getMessage().getMessageId();
             long chatId = update.getCallbackQuery().getMessage().getChatId();
             if(callbackData.equals(TehnicString.aboutMe)){
                 sendMessage(chatId,Answers.aboutMeText);
                 viewAboutMeMenu(chatId);
             }
             else if(callbackData.equals(TehnicString.whatWeather)){
-                SendMessage message = new SendMessage();
-                message.setChatId(String.valueOf(chatId));
-                message.setText(giveWeatherData());
-                executeMessage(message);
+                sendMessage(chatId, giveWeatherData());
                 viewAboutMeMenu(chatId);
             }
             else if(callbackData.equals(TehnicString.whatToWear)){
-                SendMessage message = new SendMessage();
-                message.setChatId(String.valueOf(chatId));
-                message.setText(recommendWhatToWear());
-                executeMessage(message);
+                sendMessage(chatId, recommendWhatToWear());
                 viewAboutMeMenu(chatId);
             }
             else if(callbackData.equals(TehnicString.wordsOfCare)){
-
+                sendMessage(chatId, giveRandomPhrasesOfCare());
+                viewAboutMeMenu(chatId);
             }
             else if(callbackData.equals(TehnicString.showCat)){
                 SendPhoto sendPhoto = new SendPhoto();
@@ -128,7 +122,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         boolean isRain=false, isSnow = false;
         int counter=0;
         double averageTemp = 0;
-        HashMap<String,String> dataMap = null;
+        HashMap<String,String> dataMap;
         try {
             dataMap = GiveClear5DaysWeatherString();
         }
@@ -137,14 +131,14 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
         StringBuilder str = new StringBuilder();
         for(int i=returnClosestTime();i<24&&i!=-1;i+=3){
-            str.append("Температура воздуха в "+i+":00 "+dataMap.get("temp"+i)+" градуса"+"\n");
+            str.append("Температура воздуха в "+i+":00: "+dataMap.get("temp"+i)+" градуса"+"\n");
             averageTemp =averageTemp + Double.parseDouble(dataMap.get("temp"+i));
             counter++;
             if (dataMap.get("main"+i) =="Rain") isRain=true;
             if (dataMap.get("main"+i) =="Snow") isSnow=true;
         }
         averageTemp = (double) Math.round((averageTemp*100 / counter))/100;
-        str.append("Средняя температура " + averageTemp+" градуса" +"\n");
+        str.append("Средняя температура " + averageTemp+" градуса" +"\n\n");
 
         if(isSnow)
             str.append(textSnowyWeather);
@@ -158,30 +152,25 @@ public class TelegramBot extends TelegramLongPollingBot {
             str.append(textColdWeather);
         else if(averageTemp>25)
             str.append(textHotWeather);
-        str.append("\n"+textFinalToWear);
+        str.append("\n\n"+textFinalToWear);
 
         return str.toString();
     }
 
     private  String giveWeatherData(){
         String str;
-        HashMap<String,String> dataMap = null;
+        HashMap<String,String> dataMap;
         try {
             dataMap = GiveClearCurrentWeatherString();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        str = "погода:\nТемпература: " + dataMap.get("temp")+"\nОщущается как: "+ dataMap.get("feels_like");
+        str = "Погоды значит следующие:\n\nТемпературы: " + dataMap.get("temp")+" градусов.\n\nОщущается они как: "+ dataMap.get("feels_like")+" градусов.\n\nВетер "+dataMap.get("speed")+" метров в секунду"
+        +".\n\nНа улице вообще "+dataMap.get("description")+".\n\nВот такие погоды, блин!";
         return str;
     }
-
-    private void viewWeatherData(long chatId) {
-    }
-
     private void srartCommandReceived(long chatId){
-        String answer = startText ;
-        sendMessage(chatId, answer);
+        sendMessage(chatId, startText);
     }
     private void viewAboutMeMenu(long chatId) {
         SendMessage message = new SendMessage();
@@ -259,16 +248,6 @@ public class TelegramBot extends TelegramLongPollingBot {
             log.error("Error occured: "+e.getMessage());
         }
     }
-
-    private void executeMessage(EditMessageText message){
-        try{
-            execute(message);
-        }
-        catch (TelegramApiException e) {
-            log.error("Error occured: "+e.getMessage());
-        }
-    }
-
 
 }
 
