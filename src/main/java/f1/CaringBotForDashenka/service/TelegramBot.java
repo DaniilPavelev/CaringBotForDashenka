@@ -35,6 +35,44 @@ import static f1.CaringBotForDashenka.service.WeatherGiver.GiveClearCurrentWeath
 @Slf4j
 @Component
 public class TelegramBot extends TelegramLongPollingBot {
+    public static void main(String[] args) {
+        boolean isRain=false, isSnow = false;
+        int counter=0;
+        double averageTemp = 0;
+        HashMap<String,String> dataMap;
+        try {
+            dataMap = GiveClear5DaysWeatherString();
+        }
+        catch (IOException e){
+            throw new RuntimeException(e);
+        }
+        StringBuilder str = new StringBuilder();
+        for(int i=returnClosestTime();i<24&&i!=-1;i+=3){
+            str.append("Температура воздуха в "+i+":00: "+dataMap.get("temp"+i)+" градуса"+"\n");
+            averageTemp =averageTemp + Double.parseDouble(dataMap.get("temp"+i));
+            counter++;
+            if (dataMap.get("main"+i).equals("\"Rain\"")) isRain=true;
+            if (dataMap.get("main"+i).equals("\"Snow\"")) isSnow=true;
+        }
+        averageTemp = (double) Math.round((averageTemp*100 / counter))/100;
+        str.append("Средняя температура " + averageTemp+" градуса" +"\n\n");
+
+        if(isSnow)
+            str.append(textSnowyWeather);
+        else if (isRain&&averageTemp<=25 && averageTemp>=18)
+            str.append(textBasicAndRainyWeather);
+        else if(!isRain&&averageTemp<=25 && averageTemp>=18)
+            str.append(textBasicAndSunnyWeather);
+        else if(averageTemp<18&&averageTemp>=10)
+            str.append(textSomeColdWeather);
+        else if(averageTemp<10)
+            str.append(textColdWeather);
+        else if(averageTemp>25)
+            str.append(textHotWeather);
+        str.append("\n\n"+textFinalToWear);
+
+        System.out.println(str);
+    }
     final BotConfig config;
 
     public TelegramBot(BotConfig config) {
@@ -146,7 +184,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             str.append(textBasicAndRainyWeather);
         else if(!isRain&&averageTemp<=25 && averageTemp>=18)
             str.append(textBasicAndSunnyWeather);
-        else if(averageTemp<=17&&averageTemp>=10)
+        else if(averageTemp<18&&averageTemp>=10)
             str.append(textSomeColdWeather);
         else if(averageTemp<10)
             str.append(textColdWeather);
