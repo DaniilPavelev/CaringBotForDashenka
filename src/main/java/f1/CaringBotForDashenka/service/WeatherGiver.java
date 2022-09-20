@@ -14,6 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 
     public class WeatherGiver {
+        public static void main(String[] args) {
+
+        }
 
         private static String giveStringDayFromData(Date date){
             String dateTimeString = String.valueOf(date);
@@ -29,6 +32,8 @@ import java.util.List;
             for (int i=0;i<data.size();i++) {
                 JsonNode timeNode = mainMapper.readTree(data.get(i)).get("dt_txt");
                 String dateTime = timeNode.toString().substring(12,14);
+                if(Integer.valueOf(dateTime)<10)
+                    dateTime = dateTime.substring(1);
                 JsonNode mainNode = mainMapper.readTree(data.get(i)).get("main");
                 usfulData.put("temp"+dateTime, mainNode.get("temp").toString());
                 usfulData.put("feels_like"+dateTime, mainNode.get("feels_like").toString());
