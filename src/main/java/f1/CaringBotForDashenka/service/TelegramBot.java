@@ -135,8 +135,8 @@ public class TelegramBot extends TelegramLongPollingBot {
             str.append("Температура воздуха в "+i+":00: "+dataMap.get("temp"+i)+" градуса"+"\n");
             averageTemp =averageTemp + Double.parseDouble(dataMap.get("temp"+i));
             counter++;
-            if (dataMap.get("main"+i) =="Rain") isRain=true;
-            if (dataMap.get("main"+i) =="Snow") isSnow=true;
+            if (dataMap.get("main"+i).equals("\"Rain\"")) isRain=true;
+            if (dataMap.get("main"+i).equals("\"Snow\"")) isSnow=true;
         }
         averageTemp = (double) Math.round((averageTemp*100 / counter))/100;
         str.append("Средняя температура " + averageTemp+" градуса" +"\n\n");
